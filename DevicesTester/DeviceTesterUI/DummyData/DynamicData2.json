@@ -1,0 +1,50 @@
+{
+  "CPU": [
+    {
+      "Id": "CPU0",
+      "UsagePercent": 45,
+      "TemperatureCelsius": 55
+    },
+    {
+      "Id": "CPU1",
+      "UsagePercent": 50,
+      "TemperatureCelsius": 58
+    }
+  ],
+  "Memory": {
+    "TotalGB": 32,
+    "UsedGB": 22.5,
+    "FreeGB": 9.5,
+    "UsagePercent": 70
+  },
+  "Storage": [
+    {
+      "Name": "C:\\",
+      "TotalGB": 256,
+      "UsedGB": 180,
+      "FreeGB": 76,
+      "UsagePercent": 70
+    },
+    {
+      "Name": "D:\\",
+      "TotalGB": 512,
+      "UsedGB": 200,
+      "FreeGB": 312,
+      "UsagePercent": 39
+    }
+  ],
+  "Network": [
+    {
+      "Interface": "eth0",
+      "BytesSentMB": 5432,
+      "BytesReceivedMB": 9876,
+      "CurrentSpeedMbps": 100
+    }
+  ],
+  "Power": {
+    "VoltageV": 12.5,
+    "CurrentA": 4.8,
+    "PowerW": 60.0
+  },
+  "Uptime": "2 days 03:21:10"
+}

@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.32.1" />
+    <PackageReference Include="Google.Protobuf.Tools" Version="3.32.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="$(NuGetPackageRoot)schneiderelectric.automation.sodb.client.protos\2.0.25030.1\content\Protos\*.proto" GrpcServices="Client" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeviceTesterCore\DeviceTesterCore.csproj" />
+    <ProjectReference Include="..\DeviceTesterServices\DeviceTesterServices.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<None Update="DummyData\*.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+		</None>
+	</ItemGroup>
+</Project>

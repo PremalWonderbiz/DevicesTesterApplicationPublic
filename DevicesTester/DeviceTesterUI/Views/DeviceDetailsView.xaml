@@ -1,0 +1,64 @@
+﻿<UserControl 
+    x:Class="DeviceTesterUI.Views.DeviceDetailsView" 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+    xmlns:local="clr-namespace:DeviceTesterUI.Animations"
+    xmlns:conv="clr-namespace:DeviceTesterUI.Converters"
+    Background="White" 
+    HorizontalAlignment="Stretch" 
+    VerticalAlignment="Stretch">
+    <UserControl.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <!-- For input box -->
+        </Grid.RowDefinitions>
+        <!-- Top Buttons Section -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <Button x:Name="DeviceGetStaticDataBtn" Content="Get Static Info" Margin="5" Width="120" Height="30" Command="{Binding GetStaticDataCommand}"/>
+            <Button x:Name="DeviceGetDynamicDataBtn" Content="Get Dynamic Info" Margin="5" Width="130" Height="30" Command="{Binding GetDynamicDataCommand}"/>
+            <Button x:Name="DeviceManageResourcesBtn" Content="Manage Device Resources" Margin="5" Width="180" Height="30" Command="{Binding ManageResourcesCommand}"/>
+        </StackPanel>
+        <!-- Bottom JSON/Text Section -->
+        <Grid Grid.Row="1">
+            <!-- TextBox -->
+            <TextBox x:Name="DeviceJsonTextBox" 
+             Text="{Binding Details.DeviceJson, Mode=TwoWay}" 
+             FontFamily="Consolas" 
+             FontSize="12" 
+             TextWrapping="NoWrap" 
+             AcceptsReturn="True" 
+             AcceptsTab="True" 
+             VerticalScrollBarVisibility="Auto" 
+             HorizontalScrollBarVisibility="Auto" 
+             IsReadOnly="True" 
+             Background="White" 
+             BorderThickness="1" 
+             Margin="0,5,0,0" 
+             BorderBrush="#FFCCCCCC" 
+             FocusVisualStyle="{x:Null}" 
+             CaretBrush="Black" 
+             Padding="5" 
+             Height="650"/>
+
+            <!-- Overlay LoadingSpinner -->
+            <local:LoadingSpinner 
+                          SpinnerSize="80"
+                          StrokeThickness="7"
+                          ArcBrush="#424242"
+                          BackgroundBrush="#33000000"
+                          ArcLength="80"
+                          RotationDuration="0:0:1"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Visibility="{Binding DataContext.IsDeviceDetailsOnlyBusy, 
+                             RelativeSource={RelativeSource AncestorType=UserControl}, 
+                             Converter={StaticResource BoolToVisibilityConverter}}"/>
+            
+        </Grid>
+    </Grid>
+</UserControl>
