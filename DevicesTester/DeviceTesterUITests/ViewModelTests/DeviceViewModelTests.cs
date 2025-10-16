@@ -35,7 +35,7 @@ namespace DeviceTesterUITests.ViewModelTests
             _repoMock.Setup(r => r.LoadDevicesAsync())
                      .ReturnsAsync(new List<Device>());
 
-            _vm = new DeviceViewModel(_toastServiceMock.Object,_repoMock.Object, _dataProviderMock.Object);
+            _vm = new DeviceViewModel(_toastServiceMock.Object, _repoMock.Object, _dataProviderMock.Object);
         }
 
         #region Selection & Editing Tests
@@ -74,7 +74,7 @@ namespace DeviceTesterUITests.ViewModelTests
         [Test]
         public async Task LoadDevicesAsync_ShouldPopulateDevices()
         {
-            var list = new List<Device> { new () { DeviceId = "1" } };
+            var list = new List<Device> { new() { DeviceId = "1" } };
             _repoMock!.Setup(r => r.LoadDevicesAsync()).ReturnsAsync(list);
 
             await _vm!.LoadDevicesAsync();
@@ -83,19 +83,31 @@ namespace DeviceTesterUITests.ViewModelTests
         }
 
         [Test]
-        public void SaveCommand_ShouldInsertNewDevice()
+        public async Task SaveCommand_ShouldInsertNewDevice()
         {
             _vm!.Form.EditingDevice = new Device { IpAddress = "127.0.0.1", Port = "9000", Agent = "Redfish" };
 
             // Execute SaveCommand which internally calls SaveDeviceAsync
-            _vm!.SaveCommand.Execute(null);
+            //_vm!.SaveCommand.Execute(null);
+            // Get the MethodInfo for the private method
+            var method = typeof(DeviceViewModel)
+                .GetMethod("SaveDeviceAsync", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            if (method == null)
+                throw new InvalidOperationException("Method not found");
+
+            // Invoke it on your view model instance
+            var task = (Task)method.Invoke(_vm, null)!;
+
+            // Await the task to ensure it completes
+            await task;
 
             ClassicAssert.AreEqual(1, _vm.List.Devices.Count);
             _repoMock!.Verify(r => r.SaveDevicesAsync(It.IsAny<IEnumerable<Device>>()), Times.AtLeastOnce);
         }
 
         [Test]
-        public void SaveDeviceAsync_UpdateExistingDevice_ShouldReplaceDevice()
+        public async Task SaveDeviceAsync_UpdateExistingDevice_ShouldReplaceDevice()
         {
             var device = new Device { DeviceId = "1", IpAddress = "127.0.0.1", Port = "9000" };
             _vm!.List.Devices.Add(new Device(device));
@@ -104,8 +116,14 @@ namespace DeviceTesterUITests.ViewModelTests
                 IpAddress = "192.168.0.1"   // change IP
             };
 
-            //_vm.Form.EditingDevice.IpAddress = "192.168.0.1"; // change IP
-            _vm.SaveCommand.Execute(null);
+            //_vm.SaveCommand.Execute(null);
+            var method = typeof(DeviceViewModel)
+                .GetMethod("SaveDeviceAsync", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (method is null)
+                throw new InvalidOperationException("Method not found");
+
+            var task = (Task)method.Invoke(_vm, null)!;
+            await task;
 
             ClassicAssert.AreEqual(1, _vm.List.Devices.Count);
             ClassicAssert.AreEqual("192.168.0.1", _vm.List.Devices[0].IpAddress);
@@ -113,13 +131,21 @@ namespace DeviceTesterUITests.ViewModelTests
         }
 
         [Test]
-        public void SaveDeviceAsync_DuplicateIpPort_ShouldSetErrorMessage()
+        public async Task SaveDeviceAsync_DuplicateIpPort_ShouldSetErrorMessage()
         {
             var device1 = new Device { DeviceId = "1", IpAddress = "127.0.0.1", Port = "9000" };
             _vm!.List.Devices.Add(device1);
 
             _vm.Form.EditingDevice = new Device { DeviceId = "2", IpAddress = "127.0.0.1", Port = "9000" };
-            _vm.SaveCommand.Execute(null);
+            //_vm.SaveCommand.Execute(null);
+            var method = typeof(DeviceViewModel)
+                .GetMethod("SaveDeviceAsync", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            if (method is null)
+                throw new InvalidOperationException("Method not found");
+
+            var task = (Task)method.Invoke(_vm, null)!;
+            await task;
 
             ClassicAssert.AreEqual("A device with the same IP and Port already exists!", _vm.Form.ErrorMessage);
         }
