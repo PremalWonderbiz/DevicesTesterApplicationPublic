@@ -23,17 +23,19 @@ namespace DeviceTesterUITests.ViewModelTests
         private DeviceViewModel? _vm;
         private Mock<IDeviceRepository>? _repoMock;
         private Mock<IDeviceDataProvider>? _dataProviderMock;
+        private Mock<IToastService>? _toastServiceMock;
 
         [SetUp]
         public void Setup()
         {
             _repoMock = new Mock<IDeviceRepository>();
             _dataProviderMock = new Mock<IDeviceDataProvider>();
+            _toastServiceMock = new Mock<IToastService>();
 
             _repoMock.Setup(r => r.LoadDevicesAsync())
                      .ReturnsAsync(new List<Device>());
 
-            _vm = new DeviceViewModel(_repoMock.Object, _dataProviderMock.Object);
+            _vm = new DeviceViewModel(_toastServiceMock.Object,_repoMock.Object, _dataProviderMock.Object);
         }
 
         #region Selection & Editing Tests

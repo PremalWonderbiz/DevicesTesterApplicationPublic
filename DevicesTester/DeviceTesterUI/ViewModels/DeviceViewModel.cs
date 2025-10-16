@@ -9,10 +9,12 @@ using System.Windows;
 using System.Windows.Threading;
 using DeviceTesterCore.Interfaces;
 using DeviceTesterCore.Models;
+using DeviceTesterServices.Services;
 using DeviceTesterUI.Commands;
 using DeviceTesterUI.Helpers;
 using DeviceTesterUI.ViewModels;
 using DeviceTesterUI.Windows;
+using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using Newtonsoft.Json;
 
@@ -26,6 +28,7 @@ namespace DeviceTesterUI.ViewModels
         // new sub-VM instance (field initializer ensures availability before ctor runs)
         private readonly DeviceListViewModel _list = new();
 
+        private readonly IToastService _toastService;
         public DeviceListViewModel List => _list;
 
         #endregion
@@ -41,13 +44,6 @@ namespace DeviceTesterUI.ViewModels
         #endregion
 
         #region DeviceDetailsViewModel refactoring
-        //private string _deviceJson;
-        //public string DeviceJson
-        //{
-        //    get => _deviceJson;
-        //    set { _deviceJson = value; OnPropertyChanged(nameof(DeviceJson)); }
-        //}
-
         private readonly DeviceDetailsViewModel _details = new();
         public DeviceDetailsViewModel Details => _details;
 
@@ -97,10 +93,11 @@ namespace DeviceTesterUI.ViewModels
         public ActionCommand GetDynamicDataCommand { get; }
         public ActionCommand ManageResourcesCommand { get; }
 
-        public DeviceViewModel(IDeviceRepository repo, IDeviceDataProvider dataProvider)
+        public DeviceViewModel(IToastService toastService, IDeviceRepository repo, IDeviceDataProvider dataProvider)
         {
             _repo = repo;
             _dataProvider = dataProvider;
+            _toastService = toastService;
 
             List.PropertyChanged += (s, e) =>
             {
@@ -137,7 +134,17 @@ namespace DeviceTesterUI.ViewModels
                 }
             };
 
-            SaveCommand = new ActionCommand(async _ => await SaveDeviceAsync(), CanSave);
+            //SaveCommand = new ActionCommand(async _ => await SaveDeviceAsync(), CanSave);
+            SaveCommand = new ActionCommand(
+                async _ =>
+                {
+                    await RunWithLoader("AddDevice", async () =>
+                    {
+                        await SaveDeviceAsync();
+                    });
+                },
+                CanSave
+            );
             ClearCommand = new ActionCommand(Clear);
             AuthenticateCommand = new ActionCommand(
                 async param =>
@@ -176,12 +183,14 @@ namespace DeviceTesterUI.ViewModels
 
         public bool IsFetchingStatic => LoadingStates.ContainsKey("StaticData") && LoadingStates["StaticData"].IsLoading;
         public bool IsFetchingDynamic => LoadingStates.ContainsKey("DynamicData") && LoadingStates["DynamicData"].IsLoading;
+        public bool IsSavingDevice => LoadingStates.ContainsKey("AddDevice") && LoadingStates["AddDevice"].IsLoading;
 
         /// <summary>
         /// Global busy flag derived from LoadingStates
         /// </summary>
         public bool IsDeviceDetailsBusy => LoadingStates.Values.Any(x => x.IsLoading);
         public bool IsDeviceDetailsOnlyBusy => IsFetchingDynamic || IsFetchingStatic;
+        public bool IsDeviceFormOnlyBusy => IsSavingDevice;
 
         private bool CanExecuteCommand()
         {
@@ -193,6 +202,8 @@ namespace DeviceTesterUI.ViewModels
             GetStaticDataCommand.RaiseCanExecuteChanged();
             GetDynamicDataCommand.RaiseCanExecuteChanged();
             ManageResourcesCommand.RaiseCanExecuteChanged();
+            AuthenticateCommand.RaiseCanExecuteChanged();
+            DeleteCommand.RaiseCanExecuteChanged();
         }
 
         protected async Task RunWithLoader(string key, Func<Task> operation)
@@ -210,6 +221,7 @@ namespace DeviceTesterUI.ViewModels
                     OnPropertyChanged(nameof(IsFetchingDynamic));
                     OnPropertyChanged(nameof(IsDeviceDetailsBusy));
                     OnPropertyChanged(nameof(IsDeviceDetailsOnlyBusy));
+                    OnPropertyChanged(nameof(IsDeviceFormOnlyBusy));
                     UpdateCommandStates();
                 }
             };
@@ -307,6 +319,7 @@ namespace DeviceTesterUI.ViewModels
 
         private void LoadPorts(string agent, bool isNewDevice = true)
         {
+            var port = Form.EditingDevice?.Port;
             Form.AvailablePorts.Clear();
 
             switch (agent)
@@ -330,10 +343,15 @@ namespace DeviceTesterUI.ViewModels
             {
                 if (!isNewDevice)
                 {
-                    if (!Form.AvailablePorts.Contains(Form.EditingDevice.Port!))
+                    if (port != "" && !Form.AvailablePorts.Contains(port))
                     {
-                        Form.AvailablePorts.Add(Form.EditingDevice.Port!);
+                        Form.AvailablePorts.Add(port);
                         SortAvailablePorts();
+                        Form.EditingDevice.Port = port;
+                    }
+                    else
+                    {
+                        Form.EditingDevice.Port = Form.AvailablePorts.FirstOrDefault() ?? "0000";
                     }
                 }
                 else
@@ -370,6 +388,17 @@ namespace DeviceTesterUI.ViewModels
                 return;
             }
 
+            // Duplicate Name check
+            bool duplicateName = List.Devices.Any(d =>
+                d.DeviceName == Form.EditingDevice.DeviceName &&
+                d.DeviceId != Form.EditingDevice.DeviceId);
+
+            if (duplicateName)
+            {
+                Form.ErrorMessage = "A device with the same Name already exists!";
+                return;
+            }
+
             Form.ErrorMessage = string.Empty;
 
             // Generate IDs if empty
@@ -378,29 +407,51 @@ namespace DeviceTesterUI.ViewModels
             if (string.IsNullOrEmpty(Form.EditingDevice.SolutionId))
                 Form.EditingDevice.SolutionId = Guid.NewGuid().ToString();
 
-            //set device name hard coded for now
-            Form.EditingDevice.DeviceName = $"Device {Form.EditingDevice.Agent}";
+            await Task.Delay(1000);
 
-            // Add or update using copy constructor
-            var existing = List.Devices.FirstOrDefault(d => d.DeviceId == Form.EditingDevice.DeviceId);
-            if (existing != null)
+            if (true) //here use res when we will use region Future Implementation sodb service add info otherwise true
             {
-                var index = List.Devices.IndexOf(existing);
-                List.Devices[index] = new Device(Form.EditingDevice);
-                await _repo.SaveDevicesAsync(List.Devices);
-                MessageBox.Show("Device updated successfully!");
+                // Add or update using copy constructor
+                var existing = List.Devices.FirstOrDefault(d => d.DeviceId == Form.EditingDevice.DeviceId);
+                if (existing != null)
+                {
+                    var index = List.Devices.IndexOf(existing);
+                    List.Devices[index] = new Device(Form.EditingDevice);
+                    await _repo.SaveDevicesAsync(List.Devices);
+                    OnPropertyChanged(nameof(List.Devices));
+                    UpdateCommandStates();
+                    //MessageBox.Show("Device updated successfully!");
+                    _toastService.ShowToast(new ToastMessage
+                    {
+                        Message = "Device updated successfully!",
+                        Level = ToastLevel.Success,
+                        ViewKey = "DeviceList"
+                    });
+                }
+                else
+                {
+                    Form.EditingDevice.IsAuthenticated = false;
+                    List.Devices.Insert(0, new Device(Form.EditingDevice));
+                    await _repo.SaveDevicesAsync(List.Devices);
+                    OnPropertyChanged(nameof(List.Devices));
+                    UpdateCommandStates();
+                    //MessageBox.Show("Device saved successfully!");
+                    _toastService.ShowToast(new ToastMessage
+                    {
+                        Message = "Device Saved successfully!",
+                        Level = ToastLevel.Success,
+                        ViewKey = "DeviceList"
+                    });
+                }
             }
             else
             {
-                Form.EditingDevice.IsAuthenticated = false;
-                List.Devices.Insert(0, new Device(Form.EditingDevice));
-                await _repo.SaveDevicesAsync(List.Devices);
-                MessageBox.Show("Device saved successfully!");
+                //MessageBox.Show("Failed to add device to SODB. Device not saved.");
+                Form.ErrorMessage = "Failed to add device to SODB. Device not saved.";
+                return;
             }
-
             Clear(new object());
         }
-
 
         private bool CanSave(object obj)
         {
@@ -437,7 +488,25 @@ namespace DeviceTesterUI.ViewModels
             OnPropertyChanged(nameof(List.Devices));
             UpdateCommandStates();
 
-            MessageBox.Show(result ? "Authentication succeeded" : "Authentication failed"); 
+            //MessageBox.Show(result ? "Authentication succeeded" : "Authentication failed");
+            if (result)
+            {
+                _toastService.ShowToast(new ToastMessage
+                {
+                    Message = "Device updated successfully!\nPlease check the device status.\nAll settings have been saved correctly.",
+                    Level = ToastLevel.Success,
+                    ViewKey = "DeviceList"
+                });
+            }
+            else
+            {
+                _toastService.ShowToast(new ToastMessage
+                {
+                    Message = "Authentication failed!",
+                    Level = ToastLevel.Error,
+                    ViewKey = "DeviceList"
+                });
+            }
         }
 
         private async Task DeleteDeviceAsync(Device? device)
@@ -458,7 +527,13 @@ namespace DeviceTesterUI.ViewModels
                 if (List.SelectedDevice == device)
                     Form.EditingDevice = CreateDefaultDevice();
 
-                MessageBox.Show("Device deleted successfully");
+                //MessageBox.Show("Device deleted successfully");
+                _toastService.ShowToast(new ToastMessage
+                {
+                    Message = "Device deleted successfully!",
+                    Level = ToastLevel.Success,
+                    ViewKey = "DeviceList"
+                });
             }
         }
 
@@ -562,7 +637,6 @@ namespace DeviceTesterUI.ViewModels
         public Dictionary<string, LoadingState> LoadingStates { get; } = new();
 
     }
-
 }
 
 

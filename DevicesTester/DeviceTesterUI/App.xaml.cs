@@ -16,21 +16,22 @@ namespace DeviceTesterUI
     /// </summary>
     public partial class App : Application
     {
-        private readonly ServiceProvider _serviceProvider;
+        public static ServiceProvider serviceProvider;
 
         public App()
         {
-            ServiceCollection services = new ();
+            ServiceCollection services = new();
 
             ConfigureServices(services);
 
-            _serviceProvider = services.BuildServiceProvider();
+            serviceProvider = services.BuildServiceProvider();
         }
 
         private static void ConfigureServices(ServiceCollection services)
         {
             // Register Repositories
             services.AddSingleton<IDeviceRepository, DeviceRepository>();
+            services.AddSingleton<IToastService, ToastService>();
 
             // Register ViewModels
             services.AddSingleton<DeviceViewModel>();
@@ -56,7 +57,7 @@ namespace DeviceTesterUI
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+            var mainWindow = serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
             base.OnStartup(e);
         }

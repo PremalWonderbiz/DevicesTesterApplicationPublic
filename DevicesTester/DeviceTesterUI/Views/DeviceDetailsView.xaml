@@ -39,11 +39,30 @@
              Background="White" 
              BorderThickness="1" 
              Margin="0,5,0,0" 
-             BorderBrush="#FFCCCCCC" 
              FocusVisualStyle="{x:Null}" 
              CaretBrush="Black" 
              Padding="5" 
-             Height="650"/>
+             Height="650"
+                     >
+                <TextBox.Template>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Bd"
+                    BorderBrush="#BDBDBD"
+                    BorderThickness="1"
+                    Background="{TemplateBinding Background}">
+                            <ScrollViewer x:Name="PART_ContentHost" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#969696"/>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#969696"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </TextBox.Template>
+            </TextBox>
 
             <!-- Overlay LoadingSpinner -->
             <local:LoadingSpinner 
@@ -58,7 +77,7 @@
                           Visibility="{Binding DataContext.IsDeviceDetailsOnlyBusy, 
                              RelativeSource={RelativeSource AncestorType=UserControl}, 
                              Converter={StaticResource BoolToVisibilityConverter}}"/>
-            
+
         </Grid>
     </Grid>
 </UserControl>

@@ -11,9 +11,9 @@ namespace DeviceTesterCore.Models
 {
     public class Device : INotifyPropertyChanged, INotifyDataErrorInfo
     {
-        #pragma warning disable IDE0028
+#pragma warning disable IDE0028
         private readonly Dictionary<string, List<string>> _errors = new() { };
-        #pragma warning restore IDE0028
+#pragma warning restore IDE0028
 
         private readonly bool _suppressValidation = true;
 
@@ -30,6 +30,7 @@ namespace DeviceTesterCore.Models
             Password = "";
             UseSecureConnection = true;
             IsAuthenticated = false;
+            DeviceName = "";
 
             _suppressValidation = false;
         }
@@ -49,8 +50,9 @@ namespace DeviceTesterCore.Models
             Password = other.Password;
             IsAuthenticated = other.IsAuthenticated;
             UseSecureConnection = other.UseSecureConnection;
+            DeviceName = other.DeviceName;
 
-            _suppressValidation = false;  
+            _suppressValidation = false;
         }
 
         // ==== Properties with Validation Attributes ====
@@ -105,6 +107,7 @@ namespace DeviceTesterCore.Models
         }
 
         private string? _deviceName;
+        [Required(ErrorMessage = "Name is required")]
         public string? DeviceName
         {
             get => _deviceName;
@@ -212,7 +215,7 @@ namespace DeviceTesterCore.Models
 
         private void ValidateProperty(string propertyName, object? value)
         {
-            if (_suppressValidation) return; 
+            if (_suppressValidation) return;
             var results = new List<ValidationResult>();
 
             Validator.TryValidateProperty(

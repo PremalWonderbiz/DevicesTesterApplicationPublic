@@ -15,7 +15,7 @@
             <!-- Right side (Device Details) -->
         </Grid.ColumnDefinitions>
         <DockPanel>
-            <GroupBox Header="Device List" DockPanel.Dock="Top" Height="324" Background="White" ScrollViewer.CanContentScroll="True">
+            <GroupBox Header="Device List" DockPanel.Dock="Top" Height="370" Background="White" ScrollViewer.CanContentScroll="True">
                 <GroupBox.HeaderTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding}" 
@@ -27,7 +27,7 @@
                 <views:DeviceListView  x:Name="DeviceListView" DataContext="{Binding}"/>
             </GroupBox>
 
-            <GroupBox Header="Add New Device" DockPanel.Dock="Bottom" Height="427"  Background="White">
+            <GroupBox Header="Add New Device" DockPanel.Dock="Bottom" Height="410"  Background="White">
                 <GroupBox.HeaderTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding}" 

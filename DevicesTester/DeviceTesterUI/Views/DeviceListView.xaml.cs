@@ -12,8 +12,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DeviceTesterCore.Interfaces;
 using DeviceTesterCore.Models;
 using DeviceTesterServices.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DeviceTesterUI.Views
 {
@@ -22,9 +24,40 @@ namespace DeviceTesterUI.Views
     /// </summary>
     public partial class DeviceListView : UserControl
     {
+        private readonly IToastService _toastService;
+        private const string ViewKey = "DeviceList";
+
         public DeviceListView()
         {
             InitializeComponent();
+            _toastService = App.serviceProvider.GetService<IToastService>()!;
+            _toastService.ToastRequested += OnToastRequested;
+        }
+
+        private void OnToastRequested(ToastMessage toast)
+        {
+            if (toast.ViewKey == null || toast.ViewKey == ViewKey)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    // Map ToastLevel to WPF Brush
+                    Brush color = toast.Level switch
+                    {
+                        ToastLevel.Success => Brushes.Green,
+                        ToastLevel.Info => Brushes.LightBlue,
+                        ToastLevel.Warning => Brushes.Orange,
+                        ToastLevel.Error => Brushes.Red,
+                        _ => Brushes.Gray
+                    };
+
+                    Toast.Show(toast.Message, color);
+                });
+            }
+        }
+
+        private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            _toastService.ToastRequested -= OnToastRequested;
         }
     }
 }
