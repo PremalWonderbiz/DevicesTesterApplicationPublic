@@ -20,10 +20,10 @@ This project follows a **layered architecture** with clear separation of concern
   * JSON-based implementation included (`JsonDeviceDataProvider`)
 
 * **Device Operations & Flow**
-
-  * **Authentication** – secure login before accessing device operations
+  
   * **Add / Create** – register new devices with validation checks
   * **Update** – modify existing device metadata and credentials
+  * * **Authentication** – secure login before accessing device operations
   * **Delete** – safely remove devices from the system
   * **View Static Data** – inspect device configuration, metadata, and fixed attributes (ID, IP, ports, etc.)
   * **View Dynamic Data** – monitor live values such as status, health, or runtime metrics
@@ -53,22 +53,43 @@ This project follows a **layered architecture** with clear separation of concern
 
 ```
 DevicesTester.sln
-├── DeviceTesterCore        # Core models, interfaces, validation
+├── DeviceTesterCore              # Core models and shared logic
+│   ├── Dependencies
 │   ├── Models
 │   ├── Interfaces
 │   └── CustomAttributes
-├── DeviceTesterServices    # Repository & service implementations
+│
+├── DeviceTesterServices          # Repository and service implementations
+│   ├── Dependencies
 │   ├── Repositories
 │   └── Services
-├── DeviceTesterUI          # WPF UI (MVVM-ready)
-│   ├── Views (XAML)
-│   ├── ViewModels
-│   └── Helpers & Converters
-├── DeviceTesterTests       # Unit tests with dummy JSON device data
+│
+├── DeviceTesterTests             # Backend unit tests
+│   ├── Dependencies
 │   ├── RepositoryTests
-│   ├── devices.json
-│   ├── test_devices.json
-│   └── dynamic_data_files (5 rotating JSON files for simulated metrics)
+│   └── ServicesTests
+│
+├── DeviceTesterUI                # WPF UI (MVVM architecture)
+│   ├── Dependencies
+│   ├── Properties
+│   ├── Animations
+│   ├── Commands
+│   ├── Converters
+│   ├── DummyData
+│   ├── Helpers
+│   ├── ViewModels
+│   ├── Views
+│   ├── Windows
+│   ├── App.xaml
+│   ├── App.xaml.cs
+│   └── AssemblyInfo.cs
+│
+├── DeviceTesterUITests           # UI-level unit tests (MVVM)
+│   ├── Dependencies
+│   ├── Converters
+│   ├── Helpers
+│   └── ViewModelTests
+│
 └── .gitignore
 ```
 
@@ -111,25 +132,15 @@ dotnet run
 
 ---
 
-## 🧪 Running Tests
-
-```bash
-cd DeviceTesterTests
-dotnet test
-```
-
----
-
 ## 📖 Example Workflow
 
-1. **Login / Authenticate**
-
-   * Enter credentials to access device operations.
-
-2. **Add a Device**
+1. **Add a Device**
 
    * Fill in Device ID, IP address, port, username, password, etc.
    * Validation runs automatically (required, regex, ranges).
+2. **Authenticate Device**
+
+   * Authenticate the device to access the data.
 
 3. **View Device Data**
 
@@ -143,10 +154,6 @@ dotnet test
 5. **Delete Device**
 
    * Remove devices safely through repository layer.
-
-6. **Testing**
-
-   * Automated unit tests verify repository operations and dynamic data handling.
 
 ---
 
