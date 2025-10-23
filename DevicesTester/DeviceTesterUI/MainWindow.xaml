@@ -5,62 +5,76 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DeviceTesterUI"
         xmlns:views="clr-namespace:DeviceTesterUI.Views"
+        xmlns:helpers="clr-namespace:DeviceTesterUI.Helpers"
         mc:Ignorable="d"    
-        Title="MainWindow" MinWidth="1250" MinHeight="800" Background="#FFE9E9E9">
-    <Grid Margin="10,10,10,10">
+        Title="MainWindow" MinWidth="1250" MinHeight="825" Background="#FFE9E9E9">
+    <Grid Margin="0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2.1*"/>
-            <!-- Left side (Device List + Form) -->
             <ColumnDefinition Width="3*"/>
-            <!-- Right side (Device Details) -->
         </Grid.ColumnDefinitions>
-        <DockPanel>
-            <GroupBox Header="Device List" DockPanel.Dock="Top" Height="370" Background="White" ScrollViewer.CanContentScroll="True">
-                <GroupBox.HeaderTemplate>
+
+        <Grid >
+            <DockPanel Margin="10,10,0,10">
+                <GroupBox Header="Device List"
+                      DockPanel.Dock="Top"
+                      Height="370"
+                      Background="White">
+                    <GroupBox.HeaderTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding}" 
                        FontWeight="Bold" 
                        VerticalAlignment="Center"/>
                     </DataTemplate>
-                </GroupBox.HeaderTemplate>
-                <!-- Device List content goes here -->
-                <views:DeviceListView  x:Name="DeviceListView" DataContext="{Binding}"/>
-            </GroupBox>
+                    </GroupBox.HeaderTemplate>
+                    <views:DeviceListView x:Name="DeviceListView" DataContext="{Binding}" />
+                </GroupBox>
 
-            <GroupBox Header="Add New Device" DockPanel.Dock="Bottom" Height="410"  Background="White">
-                <GroupBox.HeaderTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding}" 
-                         FontWeight="Bold" 
-                         VerticalAlignment="Center"/>
-                    </DataTemplate>
-                </GroupBox.HeaderTemplate>
-                <!-- Add Device Form goes here -->
-                <views:DeviceFormView x:Name="DeviceFormView" DataContext="{Binding}"/>
-            </GroupBox>
-        </DockPanel>
-        <Grid Grid.Column="1" Background="White" Margin="10,10,0,6">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <!-- Buttons row -->
-            </Grid.RowDefinitions>
+                <GroupBox Header="Add New Device"
+                      DockPanel.Dock="Bottom"
+                      Height="410"
+                      Background="White">
+                    <GroupBox.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" 
+                               FontWeight="Bold" 
+                               VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </GroupBox.HeaderTemplate>
+                    <views:DeviceFormView x:Name="DeviceFormView" DataContext="{Binding}" />
+                </GroupBox>
+            </DockPanel>
 
-            <!-- Row 0: Buttons -->
-            <views:DeviceDetailsView Grid.Row="0" DataContext="{Binding}">
-                <views:DeviceDetailsView.Style>
-                    <Style TargetType="views:DeviceDetailsView">
-                        <Setter Property="Visibility" Value="Collapsed"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding List.SelectedDevice.Agent}" Value="Redfish">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding List.SelectedDevice.Agent}" Value="EcoRT">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </views:DeviceDetailsView.Style>
-            </views:DeviceDetailsView>
+            <helpers:ToastNotification x:Name="Toast"
+                                   Panel.ZIndex="10"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Top"
+                                   Margin="0,0,0,0"/>
+        </Grid>
+
+        <Grid Grid.Column="1">
+            <Grid Background="White" Margin="10,19,10,10">
+                <views:DeviceDetailsView  Grid.Row="0" DataContext="{Binding}">
+                    <views:DeviceDetailsView.Style>
+                        <Style TargetType="views:DeviceDetailsView">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding List.SelectedDevice.Agent}" Value="Redfish">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding List.SelectedDevice.Agent}" Value="EcoRT">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </views:DeviceDetailsView.Style>
+                </views:DeviceDetailsView>
+            </Grid>
+            <helpers:ToastNotification x:Name="RightToast"
+                       Panel.ZIndex="10"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Top"
+                       Margin="0,0,10,0"/>
         </Grid>
     </Grid>
 </Window>

@@ -28,8 +28,8 @@
             BorderBrush="{Binding BorderBrush, ElementName=Root}"
             BorderThickness="2"
             CornerRadius="6"
-            Padding="10"
-            Width="350"
+            Padding="10,5,10,5"
+            Width="300"
             Opacity="0.97"
             HorizontalAlignment="Center"
             VerticalAlignment="Center">

@@ -14,9 +14,11 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml;
+using DeviceTesterCore.Interfaces;
 using DeviceTesterCore.Models;
 using DeviceTesterUI.ViewModels;
 using DeviceTesterUI.Windows;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -28,12 +30,16 @@ namespace DeviceTesterUI.Views
     public partial class DeviceDetailsView : UserControl
     {
         private DeviceViewModel? _vm;
+        private readonly IToastService _toastService;
+        private const string ViewKey = "DeviceDetails";
 
         public DeviceDetailsView()
         {
             InitializeComponent();
             DeviceJsonTextBox.Text = string.Empty;
             DataContextChanged += DeviceDetailsView_DataContextChanged;
+            _toastService = App.serviceProvider.GetService<IToastService>()!;
+            _toastService.ToastRequested += OnToastRequested;
         }
 
         private void DeviceDetailsView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -57,5 +63,31 @@ namespace DeviceTesterUI.Views
             }
         }
 
+
+        private void OnToastRequested(ToastMessage toast)
+        {
+            if (toast.ViewKey == null || toast.ViewKey == ViewKey)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    // Map ToastLevel to WPF Brush
+                    Brush color = toast.Level switch
+                    {
+                        ToastLevel.Success => Brushes.Green,
+                        ToastLevel.Info => Brushes.LightBlue,
+                        ToastLevel.Warning => Brushes.Orange,
+                        ToastLevel.Error => Brushes.Red,
+                        _ => Brushes.Gray
+                    };
+
+                    Toast.Show(toast.Message, color);
+                });
+            }
+        }
+
+        private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            _toastService.ToastRequested -= OnToastRequested;
+        }
     }
 }

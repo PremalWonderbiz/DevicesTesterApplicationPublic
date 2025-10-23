@@ -104,6 +104,7 @@ namespace DeviceTesterUITests.ViewModelTests
 
             ClassicAssert.AreEqual(1, _vm.List.Devices.Count);
             _repoMock!.Verify(r => r.SaveDevicesAsync(It.IsAny<IEnumerable<Device>>()), Times.AtLeastOnce);
+            _toastServiceMock!.Verify(r => r.ShowToast(It.IsAny<ToastMessage>()), Times.Once);
         }
 
         [Test]
@@ -128,6 +129,7 @@ namespace DeviceTesterUITests.ViewModelTests
             ClassicAssert.AreEqual(1, _vm.List.Devices.Count);
             ClassicAssert.AreEqual("192.168.0.1", _vm.List.Devices[0].IpAddress);
             _repoMock!.Verify(r => r.SaveDevicesAsync(It.IsAny<IEnumerable<Device>>()), Times.AtLeastOnce);
+            _toastServiceMock!.Verify(r => r.ShowToast(It.IsAny<ToastMessage>()), Times.Once);
         }
 
         [Test]
@@ -162,7 +164,34 @@ namespace DeviceTesterUITests.ViewModelTests
             _vm.List.Devices.Remove(device); // simulate confirmation
 
             ClassicAssert.IsFalse(_vm.List.Devices.Contains(device));
+            _toastServiceMock!.Verify(r => r.ShowToast(It.IsAny<ToastMessage>()), Times.Once);
             _repoMock!.Verify(r => r.SaveDevicesAsync(It.IsAny<IEnumerable<Device>>()), Times.AtLeastOnce);
+        }
+
+        [Test]
+        public async Task AuthenticateCommand_ShouldAuthenticateDevice_AndRaiseToast()
+        {
+            // Arrange
+            var device = new Device { IpAddress = "127.0.0.1", Port = "9000", Agent = "Redfish" };
+            _vm.Form.EditingDevice = device;
+            _vm.List.Devices.Add(device);
+
+            var method = typeof(DeviceViewModel)
+                .GetMethod("AuthenticateDeviceAsync", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            if (method is null)
+                throw new InvalidOperationException("Method not found");
+
+            var task = (Task)method.Invoke(_vm, new object?[] { device })!;
+            await task;
+
+            // Assert device authentication is set
+            ClassicAssert.IsNotNull(device.IsAuthenticated, "Device IsAuthenticated should be set after authentication");
+            ClassicAssert.AreEqual(device.IsAuthenticated, _vm.Form.EditingDevice!.IsAuthenticated);
+
+            // Assert repository save is called
+            _repoMock.Verify(r => r.SaveDevicesAsync(_vm.List.Devices), Times.AtLeastOnce);
+            _toastServiceMock!.Verify(r => r.ShowToast(It.IsAny<ToastMessage>()), Times.Once);
         }
 
         #endregion

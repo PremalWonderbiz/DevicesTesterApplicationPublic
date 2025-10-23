@@ -313,7 +313,13 @@ namespace DeviceTesterUI.ViewModels
                 _staticResourceInput = popup.StaticData;
                 _dynamicResourceInput = popup.DynamicData;
 
-                MessageBox.Show("Configurations saved");
+                //MessageBox.Show("Configurations saved");
+                _toastService.ShowToast(new ToastMessage
+                {
+                    Message = "Configurations saved",
+                    Level = ToastLevel.Success,
+                    ViewKey = "MainWindowRight"
+                });
             }
         }
 
@@ -409,46 +415,37 @@ namespace DeviceTesterUI.ViewModels
 
             await Task.Delay(1000);
 
-            if (true) //here use res when we will use region Future Implementation sodb service add info otherwise true
+            // Add or update using copy constructor
+            var existing = List.Devices.FirstOrDefault(d => d.DeviceId == Form.EditingDevice.DeviceId);
+            if (existing != null)
             {
-                // Add or update using copy constructor
-                var existing = List.Devices.FirstOrDefault(d => d.DeviceId == Form.EditingDevice.DeviceId);
-                if (existing != null)
+                var index = List.Devices.IndexOf(existing);
+                List.Devices[index] = new Device(Form.EditingDevice);
+                await _repo.SaveDevicesAsync(List.Devices);
+                OnPropertyChanged(nameof(List.Devices));
+                UpdateCommandStates();
+                //MessageBox.Show("Device updated successfully!");
+                _toastService.ShowToast(new ToastMessage
                 {
-                    var index = List.Devices.IndexOf(existing);
-                    List.Devices[index] = new Device(Form.EditingDevice);
-                    await _repo.SaveDevicesAsync(List.Devices);
-                    OnPropertyChanged(nameof(List.Devices));
-                    UpdateCommandStates();
-                    //MessageBox.Show("Device updated successfully!");
-                    _toastService.ShowToast(new ToastMessage
-                    {
-                        Message = "Device updated successfully!",
-                        Level = ToastLevel.Success,
-                        ViewKey = "DeviceList"
-                    });
-                }
-                else
-                {
-                    Form.EditingDevice.IsAuthenticated = false;
-                    List.Devices.Insert(0, new Device(Form.EditingDevice));
-                    await _repo.SaveDevicesAsync(List.Devices);
-                    OnPropertyChanged(nameof(List.Devices));
-                    UpdateCommandStates();
-                    //MessageBox.Show("Device saved successfully!");
-                    _toastService.ShowToast(new ToastMessage
-                    {
-                        Message = "Device Saved successfully!",
-                        Level = ToastLevel.Success,
-                        ViewKey = "DeviceList"
-                    });
-                }
+                    Message = "Device updated successfully!",
+                    Level = ToastLevel.Success,
+                    ViewKey = "MainWindowLeft"
+                });
             }
             else
             {
-                //MessageBox.Show("Failed to add device to SODB. Device not saved.");
-                Form.ErrorMessage = "Failed to add device to SODB. Device not saved.";
-                return;
+                Form.EditingDevice.IsAuthenticated = false;
+                List.Devices.Insert(0, new Device(Form.EditingDevice));
+                await _repo.SaveDevicesAsync(List.Devices);
+                OnPropertyChanged(nameof(List.Devices));
+                UpdateCommandStates();
+                //MessageBox.Show("Device saved successfully!");
+                _toastService.ShowToast(new ToastMessage
+                {
+                    Message = "Device Saved successfully!",
+                    Level = ToastLevel.Success,
+                    ViewKey = "MainWindowLeft"
+                });
             }
             Clear(new object());
         }
@@ -493,9 +490,9 @@ namespace DeviceTesterUI.ViewModels
             {
                 _toastService.ShowToast(new ToastMessage
                 {
-                    Message = "Device updated successfully!\nPlease check the device status.\nAll settings have been saved correctly.",
+                    Message = "Authentication succeeded",
                     Level = ToastLevel.Success,
-                    ViewKey = "DeviceList"
+                    ViewKey = "MainWindowLeft"
                 });
             }
             else
@@ -504,7 +501,7 @@ namespace DeviceTesterUI.ViewModels
                 {
                     Message = "Authentication failed!",
                     Level = ToastLevel.Error,
-                    ViewKey = "DeviceList"
+                    ViewKey = "MainWindowLeft"
                 });
             }
         }
@@ -532,7 +529,7 @@ namespace DeviceTesterUI.ViewModels
                 {
                     Message = "Device deleted successfully!",
                     Level = ToastLevel.Success,
-                    ViewKey = "DeviceList"
+                    ViewKey = "MainWindowLeft"
                 });
             }
         }
